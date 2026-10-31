@@ -1,0 +1,169 @@
+======================================================================================
+                 DEFECTZERO AI — MVTEC AD DATASET VERIFICATION                
+======================================================================================
+Dataset Root Directory : C:\Users\vansh\OneDrive\Desktop\DefectZero-AI\dataset
+Root Exists            : True
+Expected Categories    : 15
+Categories Located     : 15 / 15
+
+--------------------------------------------------------------------------------------
+TABLE 1: CATEGORY-LEVEL IMAGE COUNTS & STRUCTURAL INTEGRITY
+--------------------------------------------------------------------------------------
+Category       | Type    | Train(Good) | Test(Good) | Test(Defect) | Total Test | GT Masks | Status
+--------------------------------------------------------------------------------------
+bottle         | Object  |         209 |         20 |           63 |         83 |       63 | PASS  
+cable          | Object  |         224 |         58 |           92 |        150 |       92 | PASS  
+capsule        | Object  |         219 |         23 |          109 |        132 |      109 | PASS  
+carpet         | Texture |         280 |         28 |           89 |        117 |       89 | PASS  
+grid           | Texture |         264 |         21 |           57 |         78 |       57 | PASS  
+hazelnut       | Object  |         391 |         40 |           70 |        110 |       70 | PASS  
+leather        | Texture |         245 |         32 |           92 |        124 |       92 | PASS  
+metal_nut      | Object  |         220 |         22 |           93 |        115 |       93 | PASS  
+pill           | Object  |         267 |         26 |          141 |        167 |      141 | PASS  
+screw          | Object  |         320 |         41 |          119 |        160 |      119 | PASS  
+tile           | Texture |         230 |         33 |           84 |        117 |       84 | PASS  
+toothbrush     | Object  |          60 |         12 |           30 |         42 |       30 | PASS  
+transistor     | Object  |         213 |         60 |           40 |        100 |       40 | PASS  
+wood           | Texture |         247 |         19 |           60 |         79 |       60 | PASS  
+zipper         | Object  |         240 |         32 |          119 |        151 |      119 | PASS  
+--------------------------------------------------------------------------------------
+TOTAL (15)     | ALL     |        3629 |        467 |         1258 |       1725 |     1258 | PASS  
+--------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------
+TABLE 2: DETAILED DEFECT TAXONOMY & GROUND TRUTH MASK CORRESPONDENCE
+--------------------------------------------------------------------------------------
+Category       | Defect Type                | Test Imgs  | GT Masks   | Match
+--------------------------------------------------------------------------------------
+bottle         | broken_large               |         20 |         20 | YES
+               | broken_small               |         22 |         22 | YES
+               | contamination              |         21 |         21 | YES
+cable          | bent_wire                  |         13 |         13 | YES
+               | cable_swap                 |         12 |         12 | YES
+               | combined                   |         11 |         11 | YES
+               | cut_inner_insulation       |         14 |         14 | YES
+               | cut_outer_insulation       |         10 |         10 | YES
+               | missing_cable              |         12 |         12 | YES
+               | missing_wire               |         10 |         10 | YES
+               | poke_insulation            |         10 |         10 | YES
+capsule        | crack                      |         23 |         23 | YES
+               | faulty_imprint             |         22 |         22 | YES
+               | poke                       |         21 |         21 | YES
+               | scratch                    |         23 |         23 | YES
+               | squeeze                    |         20 |         20 | YES
+carpet         | color                      |         19 |         19 | YES
+               | cut                        |         17 |         17 | YES
+               | hole                       |         17 |         17 | YES
+               | metal_contamination        |         17 |         17 | YES
+               | thread                     |         19 |         19 | YES
+grid           | bent                       |         12 |         12 | YES
+               | broken                     |         12 |         12 | YES
+               | glue                       |         11 |         11 | YES
+               | metal_contamination        |         11 |         11 | YES
+               | thread                     |         11 |         11 | YES
+hazelnut       | crack                      |         18 |         18 | YES
+               | cut                        |         17 |         17 | YES
+               | hole                       |         18 |         18 | YES
+               | print                      |         17 |         17 | YES
+leather        | color                      |         19 |         19 | YES
+               | cut                        |         19 |         19 | YES
+               | fold                       |         17 |         17 | YES
+               | glue                       |         19 |         19 | YES
+               | poke                       |         18 |         18 | YES
+metal_nut      | bent                       |         25 |         25 | YES
+               | color                      |         22 |         22 | YES
+               | flip                       |         23 |         23 | YES
+               | scratch                    |         23 |         23 | YES
+pill           | color                      |         25 |         25 | YES
+               | combined                   |         17 |         17 | YES
+               | contamination              |         21 |         21 | YES
+               | crack                      |         26 |         26 | YES
+               | faulty_imprint             |         19 |         19 | YES
+               | pill_type                  |          9 |          9 | YES
+               | scratch                    |         24 |         24 | YES
+screw          | manipulated_front          |         24 |         24 | YES
+               | scratch_head               |         24 |         24 | YES
+               | scratch_neck               |         25 |         25 | YES
+               | thread_side                |         23 |         23 | YES
+               | thread_top                 |         23 |         23 | YES
+tile           | crack                      |         17 |         17 | YES
+               | glue_strip                 |         18 |         18 | YES
+               | gray_stroke                |         16 |         16 | YES
+               | oil                        |         18 |         18 | YES
+               | rough                      |         15 |         15 | YES
+toothbrush     | defective                  |         30 |         30 | YES
+transistor     | bent_lead                  |         10 |         10 | YES
+               | cut_lead                   |         10 |         10 | YES
+               | damaged_case               |         10 |         10 | YES
+               | misplaced                  |         10 |         10 | YES
+wood           | color                      |          8 |          8 | YES
+               | combined                   |         11 |         11 | YES
+               | hole                       |         10 |         10 | YES
+               | liquid                     |         10 |         10 | YES
+               | scratch                    |         21 |         21 | YES
+zipper         | broken_teeth               |         19 |         19 | YES
+               | combined                   |         16 |         16 | YES
+               | fabric_border              |         17 |         17 | YES
+               | fabric_interior            |         16 |         16 | YES
+               | rough                      |         17 |         17 | YES
+               | split_teeth                |         18 |         18 | YES
+               | squeezed_teeth             |         16 |         16 | YES
+--------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------
+TABLE 3: IMAGE FORMATS, RESOLUTIONS & COLOR MODES
+--------------------------------------------------------------------------------------
+Category       | Formats Found    | Sample Resolutions           | Color Modes
+--------------------------------------------------------------------------------------
+bottle         | .png             | 900x900                      | RGB
+cable          | .png             | 1024x1024                    | RGB
+capsule        | .png             | 1000x1000                    | RGB
+carpet         | .png             | 1024x1024                    | RGB
+grid           | .png             | 1024x1024                    | L
+hazelnut       | .png             | 1024x1024                    | RGB
+leather        | .png             | 1024x1024                    | RGB
+metal_nut      | .png             | 700x700                      | RGB
+pill           | .png             | 800x800                      | RGB
+screw          | .png             | 1024x1024                    | L
+tile           | .png             | 840x840                      | RGB
+toothbrush     | .png             | 1024x1024                    | RGB
+transistor     | .png             | 1024x1024                    | RGB
+wood           | .png             | 1024x1024                    | RGB
+zipper         | .png             | 1024x1024                    | L
+--------------------------------------------------------------------------------------
+
+======================================================================================
+                          DIAGNOSTIC & ERROR AUDIT LOG                        
+======================================================================================
+
+[*] AUDIT RESULT: ZERO STRUCTURAL OR FILENAME DEFECTS DETECTED.
+    - All 15 official category folders are present.
+    - All train/good, test/good, test/<defect>, and ground_truth/<defect> folders exist.
+    - 1-to-1 exact filename correspondence between all defective test images and masks.
+    - Zero missing masks, zero orphaned masks, zero corrupted files.
+
+======================================================================================
+                              VERIFICATION CHECKLIST                          
+======================================================================================
+ [ PASS ] 1. All 15 MVTec AD category folders present
+ [ PASS ] 2. All train, test, and ground_truth subfolders verified
+ [ PASS ] 3. Normal training images counted (3629 images)
+ [ PASS ] 4. Normal testing images counted (467 images)
+ [ PASS ] 5. Defective testing images counted (1258 images)
+ [ PASS ] 6. Ground-truth segmentation masks verified (1258 masks)
+ [ PASS ] 7. 1-to-1 Image-to-Mask filename correspondence verified
+ [ PASS ] 8. Image formats, resolutions, and file integrity checked
+======================================================================================
+
+DATASET METRIC SUMMARY:
+  * Total Categories                  : 15 (5 Textures, 10 Objects)
+  * Total Normal Training Images      : 3629
+  * Total Normal Testing Images       : 467
+  * Total Defective Testing Images    : 1258
+  * Total Testing Images              : 1725
+  * Total Dataset Inspection Images   : 5354 (train + test)
+  * Total Ground-Truth Binary Masks   : 1258
+  * Total Distinct Defect Classes     : 73
+  * Standard MVTec AD Paper Benchmark : 5,354 images (3,629 train + 1,725 test)
+  * Integrity Assessment               : PERFECT MATCH (100% Complete)
+======================================================================================

@@ -1,0 +1,16 @@
+.venv*/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+dataset/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+*.sqlite
+*.db
+experiments/eda_outputs/*_images_grid.png
+experiments/eda_outputs/*_mask_overlays.png
