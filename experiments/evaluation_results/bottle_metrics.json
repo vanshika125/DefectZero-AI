@@ -1,0 +1,28 @@
+{
+  "category": "bottle",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "broken_large": 4,
+    "broken_small": 3,
+    "contamination": 3
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 1.0,
+  "image_auroc_display": "1.0000",
+  "pixel_auroc": 0.934743,
+  "pixel_auroc_display": "0.9347",
+  "mean_inference_time_sec": 10.8466,
+  "std_inference_time_sec": 0.7176,
+  "min_inference_time_sec": 9.5269,
+  "max_inference_time_sec": 12.0768,
+  "total_evaluation_time_sec": 218.23,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-10-31T12:53:40.121446+00:00"
+}

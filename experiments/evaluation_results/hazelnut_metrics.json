@@ -1,0 +1,29 @@
+{
+  "category": "hazelnut",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "crack": 3,
+    "cut": 3,
+    "hole": 2,
+    "print": 2
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 0.88,
+  "image_auroc_display": "0.8800",
+  "pixel_auroc": 0.960235,
+  "pixel_auroc_display": "0.9602",
+  "mean_inference_time_sec": 9.8298,
+  "std_inference_time_sec": 0.2778,
+  "min_inference_time_sec": 9.4999,
+  "max_inference_time_sec": 10.456,
+  "total_evaluation_time_sec": 199.04,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-10-31T13:16:05.639250+00:00"
+}

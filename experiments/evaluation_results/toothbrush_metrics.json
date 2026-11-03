@@ -1,0 +1,26 @@
+{
+  "category": "toothbrush",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "defective": 10
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 1.0,
+  "image_auroc_display": "1.0000",
+  "pixel_auroc": 0.894067,
+  "pixel_auroc_display": "0.8941",
+  "mean_inference_time_sec": 31.7377,
+  "std_inference_time_sec": 85.1357,
+  "min_inference_time_sec": 11.0787,
+  "max_inference_time_sec": 402.8234,
+  "total_evaluation_time_sec": 636.97,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-10-31T14:16:42.788496+00:00"
+}

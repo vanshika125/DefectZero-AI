@@ -1,0 +1,32 @@
+{
+  "category": "pill",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "color": 2,
+    "combined": 2,
+    "contamination": 2,
+    "crack": 1,
+    "faulty_imprint": 1,
+    "pill_type": 1,
+    "scratch": 1
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 0.87,
+  "image_auroc_display": "0.8700",
+  "pixel_auroc": 0.793884,
+  "pixel_auroc_display": "0.7939",
+  "mean_inference_time_sec": 11.1983,
+  "std_inference_time_sec": 0.2157,
+  "min_inference_time_sec": 10.9376,
+  "max_inference_time_sec": 11.6945,
+  "total_evaluation_time_sec": 225.43,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-10-31T13:49:50.308648+00:00"
+}

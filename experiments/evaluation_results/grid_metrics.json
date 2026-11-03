@@ -1,0 +1,30 @@
+{
+  "category": "grid",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "bent": 2,
+    "broken": 2,
+    "glue": 2,
+    "metal_contamination": 2,
+    "thread": 2
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 1.0,
+  "image_auroc_display": "1.0000",
+  "pixel_auroc": 0.89245,
+  "pixel_auroc_display": "0.8924",
+  "mean_inference_time_sec": 9.5603,
+  "std_inference_time_sec": 0.455,
+  "min_inference_time_sec": 9.2123,
+  "max_inference_time_sec": 10.9026,
+  "total_evaluation_time_sec": 192.72,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-10-31T13:11:39.694351+00:00"
+}

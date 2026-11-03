@@ -1,0 +1,30 @@
+{
+  "category": "leather",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "color": 2,
+    "cut": 2,
+    "fold": 2,
+    "glue": 2,
+    "poke": 2
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 1.0,
+  "image_auroc_display": "1.0000",
+  "pixel_auroc": 0.973786,
+  "pixel_auroc_display": "0.9738",
+  "mean_inference_time_sec": 28.6,
+  "std_inference_time_sec": 73.9854,
+  "min_inference_time_sec": 11.0262,
+  "max_inference_time_sec": 351.0863,
+  "total_evaluation_time_sec": 574.46,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-10-31T13:36:16.850018+00:00"
+}

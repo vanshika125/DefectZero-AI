@@ -1,0 +1,33 @@
+{
+  "category": "cable",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "bent_wire": 2,
+    "cable_swap": 2,
+    "combined": 1,
+    "cut_inner_insulation": 1,
+    "cut_outer_insulation": 1,
+    "missing_cable": 1,
+    "missing_wire": 1,
+    "poke_insulation": 1
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 0.7,
+  "image_auroc_display": "0.7000",
+  "pixel_auroc": 0.517988,
+  "pixel_auroc_display": "0.5180",
+  "mean_inference_time_sec": 9.9821,
+  "std_inference_time_sec": 0.4215,
+  "min_inference_time_sec": 9.3024,
+  "max_inference_time_sec": 10.5321,
+  "total_evaluation_time_sec": 202.77,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-10-31T12:58:01.212316+00:00"
+}

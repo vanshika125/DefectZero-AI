@@ -1,0 +1,30 @@
+{
+  "category": "capsule",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "crack": 2,
+    "faulty_imprint": 2,
+    "poke": 2,
+    "scratch": 2,
+    "squeeze": 2
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 0.64,
+  "image_auroc_display": "0.6400",
+  "pixel_auroc": 0.932119,
+  "pixel_auroc_display": "0.9321",
+  "mean_inference_time_sec": 10.6402,
+  "std_inference_time_sec": 0.8357,
+  "min_inference_time_sec": 9.2725,
+  "max_inference_time_sec": 12.5136,
+  "total_evaluation_time_sec": 215.19,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-10-31T13:02:37.681789+00:00"
+}

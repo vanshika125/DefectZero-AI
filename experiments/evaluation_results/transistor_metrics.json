@@ -1,0 +1,29 @@
+{
+  "category": "transistor",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "bent_lead": 3,
+    "cut_lead": 3,
+    "damaged_case": 2,
+    "misplaced": 2
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 0.79,
+  "image_auroc_display": "0.7900",
+  "pixel_auroc": 0.88276,
+  "pixel_auroc_display": "0.8828",
+  "mean_inference_time_sec": 4030.4256,
+  "std_inference_time_sec": 14834.1496,
+  "min_inference_time_sec": 6.5022,
+  "max_inference_time_sec": 67523.012,
+  "total_evaluation_time_sec": 80610.66,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-11-01T12:41:13.831469+00:00"
+}

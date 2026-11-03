@@ -1,0 +1,30 @@
+{
+  "category": "carpet",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "color": 2,
+    "cut": 2,
+    "hole": 2,
+    "metal_contamination": 2,
+    "thread": 2
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 0.97,
+  "image_auroc_display": "0.9700",
+  "pixel_auroc": 0.969399,
+  "pixel_auroc_display": "0.9694",
+  "mean_inference_time_sec": 10.4546,
+  "std_inference_time_sec": 0.3719,
+  "min_inference_time_sec": 10.0506,
+  "max_inference_time_sec": 11.8486,
+  "total_evaluation_time_sec": 211.34,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-10-31T13:07:17.952777+00:00"
+}

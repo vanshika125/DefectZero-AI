@@ -1,0 +1,29 @@
+{
+  "category": "metal_nut",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "bent": 3,
+    "color": 3,
+    "flip": 2,
+    "scratch": 2
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 0.91,
+  "image_auroc_display": "0.9100",
+  "pixel_auroc": 0.46804,
+  "pixel_auroc_display": "0.4680",
+  "mean_inference_time_sec": 21.5856,
+  "std_inference_time_sec": 42.449,
+  "min_inference_time_sec": 10.8486,
+  "max_inference_time_sec": 206.5686,
+  "total_evaluation_time_sec": 432.85,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-10-31T13:44:42.436319+00:00"
+}

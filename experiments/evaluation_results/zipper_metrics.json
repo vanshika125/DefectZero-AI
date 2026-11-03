@@ -1,0 +1,32 @@
+{
+  "category": "zipper",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "broken_teeth": 2,
+    "combined": 2,
+    "fabric_border": 2,
+    "fabric_interior": 1,
+    "rough": 1,
+    "split_teeth": 1,
+    "squeezed_teeth": 1
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 0.97,
+  "image_auroc_display": "0.9700",
+  "pixel_auroc": 0.937692,
+  "pixel_auroc_display": "0.9377",
+  "mean_inference_time_sec": 7.1936,
+  "std_inference_time_sec": 0.5191,
+  "min_inference_time_sec": 6.6828,
+  "max_inference_time_sec": 9.0879,
+  "total_evaluation_time_sec": 144.83,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-11-01T12:47:50.413737+00:00"
+}

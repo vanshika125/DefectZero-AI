@@ -1,178 +1,212 @@
-# DefectZero AI — Zero-Shot Industrial Defect Detection
+# DefectZero AI
 
-[![Deep Learning](https://img.shields.io/badge/Domain-Deep%20Learning%20%26%20CV-blue.svg)](./docs/)
-[![Model](https://img.shields.io/badge/VLM-WinCLIP%20(CVPR%202023)-8A2BE2.svg)](./docs/03_literature_review.md)
-[![Dataset](https://img.shields.io/badge/Dataset-MVTec%20AD%20(5354%20Images)-green.svg)](./experiments/dataset_summary.txt)
-[![API](https://img.shields.io/badge/Serving-FastAPI%20Microservice-teal.svg)](./ai-service/)
-[![Frontend](https://img.shields.io/badge/Frontend-React%20%7C%20TypeScript%20%7C%20Tailwind-red.svg)](./)
+**Zero-shot industrial defect inspection with pretrained WinCLIP**
 
-> **University Project:** Deep Learning for Computer Vision  
-> **Core Objective:** Identify and segment previously unseen industrial surface defects in novel manufacturing categories using pretrained Vision-Language Models (VLMs) without per-category model retraining or nominal memory banks.
+DefectZero AI is a university project that demonstrates image-level anomaly detection and pixel-level defect localization for the 15 categories in the MVTec Anomaly Detection (MVTec AD) dataset. An operator selects a category and submits an image to pretrained WinCLIP through a FastAPI service. The service returns an anomaly score and heatmap; completed inspections can be reviewed in history and exported as PDF reports.
 
----
+WinCLIP is used in **zero-shot mode** (`k_shot=0`) with pretrained weights. This project does not train or fine-tune the model.
 
-## 1. Project Overview & Motivation
+## Project objectives
 
-In automated industrial visual quality inspection, conventional deep learning models face severe deployment bottlenecks:
-1. **The Extreme Class Imbalance Dilemma:** Real manufacturing defect rates are typically $<0.1\%$. Collecting thousands of labeled defect examples to train supervised classifiers (YOLO, Mask R-CNN, ResNet) is financially and logistically prohibitive.
-2. **The Per-Category Retraining Trap:** State-of-the-art Unsupervised Anomaly Detection (UAD) models like **PatchCore** require hundreds of nominal (defect-free) calibration samples to build a custom memory bank for *every single product variation*.
-3. **High-Mix Low-Volume (HMLV) Production:** Fast-changing production lines demand instant inspection capabilities with zero setup time.
+- Evaluate pretrained WinCLIP on industrial object and texture categories without category-specific training.
+- Return an image-level anomaly score and pixel-level anomaly map for an uploaded image.
+- Provide a dashboard for single and sequential batch inspection.
+- Keep completed inspection metadata in SQLite and image assets in local file storage.
+- Present the saved evaluation results with their sample counts and limitations.
 
-**DefectZero AI** solves this by formulating a **Zero-Shot Vision-Language Anomaly Detection** pipeline based on **WinCLIP** (Window-based CLIP). By combining dense multi-scale window attention over Vision Transformer (ViT) patch tokens with compositional text prompt ensembles, DefectZero AI detects and localizes defects on unobserved industrial categories with **zero training images**.
+## Features
 
----
+- **Single-image inspection:** choose one of the supported MVTec AD categories and submit an image.
+- **Batch inspection:** add up to 30 images and process them sequentially. Each successful image is saved as a standard history record. A failed or invalid file does not stop the remaining queue.
+- **Visual results:** display the input, WinCLIP heatmap, and a matching ground-truth mask when one is available. The heatmap is a visualization, not a numeric map export.
+- **Inspection history:** browse saved results, filter by category or prediction, view assets and metadata, and download an individual PDF report.
+- **Batch PDF summary:** download a summary for completed inspections in the current batch.
+- **Model evaluation:** review image AUROC, pixel AUROC, sample counts, and saved timing metrics across the 15 evaluation categories.
+- **Persistent storage:** store inspection metadata and relative asset references in SQLite; store uploaded images, heatmaps, and available masks as files.
+- **Exact ground-truth lookup:** match uploaded pixel content to local MVTec AD test images. A mask is shown only when the defective image match is unique and its mask exists.
 
-## 2. System Architecture
+## Technology and architecture
 
-DefectZero AI employs a decoupled, multi-tier architecture isolating high-throughput tensor operations from web application logic:
+| Layer | Implementation |
+|---|---|
+| Dashboard | React 19, TypeScript, Vite, custom CSS |
+| API | FastAPI and Uvicorn |
+| Inference | Anomalib 2.7.0 WinCLIP, PyTorch, Pillow |
+| Persistence | SQLite metadata database and inspection-scoped local asset files |
+| Reports | ReportLab-generated PDF files |
+| Evaluation | Python evaluation script, scikit-learn AUROC, CSV/JSON outputs |
+| Dataset | MVTec AD, 15 object and texture categories |
 
-```mermaid
-graph TD
-    subgraph Client Tier
-        UI["React + TypeScript Dashboard<br/>(Tailwind CSS, Interactive Heatmap Viewer)"]
-    end
-
-    subgraph Application Tier
-        Node["Node.js Application Gateway<br/>(Express / Fastify, Multer Uploads)"]
-        DB[("SQLite Database<br/>(Inspection Logs, Telemetry, Audit Trails)")]
-    end
-
-    subgraph AI Inference Microservice [ai-service]
-        FastAPI["FastAPI AI Microservice<br/>(Uvicorn, Pydantic Data Contracts)"]
-        PyTorchEngine["PyTorch WinCLIP Engine<br/>(Frozen OpenCLIP ViT-B/16+ Backbone)"]
-        PromptEngine["Compositional Prompt Synthesizer<br/>(Nominal & Anomalous Prompt Banks)"]
-    end
-
-    UI -->|"1. Upload Inspection Image + Target Category"| Node
-    Node -->|"2. Forward Payload to AI Service"| FastAPI
-    Node -->|"Persist Inspection Record"| DB
-    FastAPI --> PromptEngine
-    FastAPI --> PyTorchEngine
-    PromptEngine -->|"Text Embeddings (T_norm, T_anom)"| PyTorchEngine
-    PyTorchEngine -->|"Heatmap Matrix + Anomaly Score"| FastAPI
-    FastAPI -->|"JSON Response (Score, Mask, Heatmap Base64)"| Node
-    Node -->|"Structured Inspection Result"| UI
+```text
+Browser (React/Vite)
+  ├─ GET /categories, GET /health
+  ├─ POST /predict (also used sequentially by Batch Inspection)
+  ├─ GET /inspections and saved asset/report routes
+  └─ GET /evaluation
+          │
+          ▼
+FastAPI service
+  ├─ Lazy, one-category-at-a-time WinCLIP model cache
+  ├─ SQLite: inspection metadata and safe relative asset paths
+  └─ ai-service/inspection_storage/<inspection UUID>/: image, heatmap, optional mask
 ```
 
----
+The backend caches one category model at a time and serializes inference within the process. Selecting another category can replace the cached model and require initialization again. Health checks are available before the model loads.
 
-## 3. Directory Layout
+## Dataset and evaluation methodology
 
+The evaluation artifacts in `experiments/evaluation_results/` report **20 test images per category**, balanced as 10 normal and 10 defective images. Defective samples are selected round-robin across defect types by `experiments/evaluate_winclip.py`; the 20-image pilot is not the full MVTec AD test split. The script uses pretrained WinCLIP with no reference images (`reference_images=None`, `k_shot=0`). It records image-level AUROC, pixel-level AUROC from flattened aligned masks and anomaly maps, per-image inference times, predictions, and representative visualizations.
+
+The checked-in summary contains results for all 15 categories (**300 image evaluations total**). The unweighted means across categories are **0.8940 image AUROC** and **0.8628 pixel AUROC**. These are descriptive pilot summaries, not full-benchmark estimates. With only 20 samples per category, AUROC can be unstable and the sample may not represent the full range of defect types, severities, or production conditions. The results do not establish statistical significance, generalization, or production readiness.
+
+Inference timing depends on hardware, initialization, and system load. The saved results include a transistor mean of **4030.4256 seconds per image**, an extreme recorded outlier that should be checked against its source measurement before drawing timing conclusions. Batch inference in the application is sequential; approximate batch duration therefore grows with the number of images.
+
+The evaluation dashboard reads the existing CSV and JSON files. It does not run evaluation or recompute metrics. Review the full [evaluation report](experiments/evaluation_results/summary_report.md), [summary CSV](experiments/evaluation_results/summary_metrics.csv), and per-category files in that folder.
+
+## Requirements
+
+- Windows 10/11 and PowerShell
+- Python environment compatible with the pinned Anomalib dependency
+- Node.js and npm
+- The MVTec AD dataset at `dataset/` for local ground-truth matching and evaluation. The dataset is not included in this repository.
+- A CUDA-capable GPU is optional. The service selects CUDA when PyTorch reports it available; otherwise it uses CPU.
+
+## Windows PowerShell setup
+
+Run from the repository root. To create a new environment, activate it, and install backend dependencies:
+
+```powershell
+py -3 -m venv .venv-winclip
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+& .\.venv-winclip\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r .\ai-service\requirements.txt
 ```
+
+For an existing project environment, use the same interpreter directly:
+
+```powershell
+.\.venv-winclip\Scripts\python.exe -m pip install -r .\ai-service\requirements.txt
+```
+
+Install frontend packages:
+
+```powershell
+Set-Location .\frontend
+npm install
+```
+
+The dataset should be arranged in the MVTec AD layout, for example:
+
+```text
+dataset/
+  bottle/
+    test/<defect_type>/*.png
+    ground_truth/<defect_type>/*_mask.png
+```
+
+Set `DEFECTZERO_DATASET_ROOT` if the dataset is stored elsewhere. Inference itself accepts user-uploaded images and does not require the dataset; local data is used for exact ground-truth matching and evaluation.
+
+## Start the application
+
+Start the FastAPI backend in one PowerShell window from the repository root and leave it running:
+
+```powershell
+.\.venv-winclip\Scripts\python.exe -m uvicorn app.main:app --app-dir .\ai-service --host 127.0.0.1 --port 8000
+```
+
+The first inference initializes pretrained WinCLIP and can take longer than subsequent requests. Check service status at <http://127.0.0.1:8000/health> and interactive API documentation at <http://127.0.0.1:8000/docs>.
+
+In a second PowerShell window, start the React dashboard:
+
+```powershell
+Set-Location .\frontend
+$env:VITE_API_BASE_URL = "http://127.0.0.1:8000"
+npm run dev -- --host localhost
+```
+
+Open <http://localhost:5173/>. The backend allows the default development origin `http://localhost:5173`; set `DEFECTZERO_CORS_ORIGINS` to the exact frontend origin if it differs. Do not use a wildcard origin for a deployed service.
+
+## API endpoints
+
+| Method and path | Purpose |
+|---|---|
+| `GET /health` | Service and lazy model readiness status. |
+| `GET /categories` | Supported MVTec AD category names. |
+| `POST /predict` | Multipart fields `category` and `image`; runs zero-shot inference and saves the successful inspection. |
+| `GET /dataset` | Return categories present under the configured dataset root and verifiable train/test/mask counts. |
+| `GET /dataset/{category}/samples?limit_per_group=3` | Return bounded representative normal/defective sample references without local filesystem paths. |
+| `GET /dataset/{category}/samples/{group}/{sample_index}/{asset_name}` | Serve an enumerated sample `image` or available `mask`; no path input is accepted. |
+| `GET /evaluation` | Reads existing evaluation CSV/JSON files; does not rerun evaluation. |
+| `GET /evaluation/report` | Serve the saved evaluation Markdown report. |
+| `GET /evaluation/assets/{asset_name}` | Serve one allowlisted saved AUROC comparison chart. |
+| `GET /inspections?limit=50&offset=0` | List saved inspection metadata, newest first. `limit` is 1–200. |
+| `GET /inspections/{inspection_id}` | Read one saved inspection record. |
+| `GET /inspections/{inspection_id}/assets/{asset_name}` | Serve only `image`, `heatmap`, or `ground_truth` for the selected inspection. |
+| `GET /inspections/{inspection_id}/report.pdf` | Generate an individual PDF report. Add `?inline=true` to open it in a browser tab. |
+| `POST /inspections/batch-report.pdf` | Generate a PDF summary from 1–30 unique, already-saved inspection IDs. Request JSON: `{"inspection_ids":["<uuid>"]}`. Does not run inference. |
+
+The `/predict` request is `multipart/form-data`, with a category from `/categories` and a single-frame image. Uploads are limited by default to 10 MiB and 25 million pixels. Invalid categories, malformed images, unsupported images, oversized inputs, and inference failures return HTTP errors with a message.
+
+## Persistence and generated files
+
+FastAPI initializes the history database at startup. By default:
+
+- SQLite database: `ai-service/inspection_storage/inspections.sqlite3`
+- Asset files: `ai-service/inspection_storage/<inspection UUID>/`
+- Each record stores category, original filename, prediction, anomaly score, threshold, inference duration, UTC timestamp, and safe relative asset paths.
+- Asset directories contain a generated input image and heatmap, plus a ground-truth mask only when an exact match is available.
+
+Generated inspection storage and the local `dataset/` are excluded from Git. Do not commit private or production inspection images.
+
+## Project structure
+
+```text
 DefectZero-AI/
-│
-├── dataset/                        # MVTec Anomaly Detection (15 categories)
-│   ├── bottle/                     # Object: 209 train, 83 test (63 defect, 20 good)
-│   ├── cable/                      # Object: 224 train, 150 test (92 defect, 58 good)
-│   ├── capsule/                    # Object: 219 train, 132 test (109 defect, 23 good)
-│   ├── carpet/                     # Texture: 280 train, 117 test (89 defect, 28 good)
-│   ├── grid/                       # Texture: 264 train, 78 test (57 defect, 21 good)
-│   ├── hazelnut/                   # Object: 391 train, 110 test (70 defect, 40 good)
-│   ├── leather/                    # Texture: 245 train, 124 test (92 defect, 32 good)
-│   ├── metal_nut/                  # Object: 220 train, 115 test (93 defect, 22 good)
-│   ├── pill/                       # Object: 267 train, 167 test (141 defect, 26 good)
-│   ├── screw/                      # Object: 320 train, 160 test (119 defect, 41 good)
-│   ├── tile/                       # Texture: 230 train, 117 test (84 defect, 33 good)
-│   ├── toothbrush/                 # Object: 60 train, 42 test (30 defect, 12 good)
-│   ├── transistor/                 # Object: 213 train, 100 test (40 defect, 60 good)
-│   ├── wood/                       # Texture: 247 train, 79 test (60 defect, 19 good)
-│   └── zipper/                     # Object: 240 train, 151 test (119 defect, 32 good)
-│
-├── docs/                           # Comprehensive Academic Research Documentation
-│   ├── 01_problem_statement.md     # Industrial QA context & task definitions
-│   ├── 02_project_objectives.md    # Primary/secondary goals & deliverables
-│   ├── 03_literature_review.md     # Classical CV -> UAD -> CLIP -> WinCLIP -> MVTec
-│   ├── 04_existing_system_vs_proposed_system.md  # Paradigm comparison & WinCLIP rationale
-│   ├── 05_project_scope.md         # Inclusions, explicit exclusions, and user personas
-│   ├── 06_proposed_methodology.md  # Mathematical formulations & WinCLIP pipeline
-│   └── 07_technology_stack.md      # Full-stack architectural justification
-│
-├── experiments/                    # Verification & Exploratory Data Analysis
-│   ├── verify_dataset.py           # Systematic dataset integrity & mask correspondence audit
-│   ├── dataset_summary.txt         # Complete empirical category and mask verification logs
-│   ├── eda.py                      # Empirical defect geometry & spatial distribution analysis
-│   └── eda_outputs/                # Generated research figures and reports
-│       ├── 01_category_distributions.png
-│       ├── 02_defect_area_distribution.png
-│       ├── 03_defect_size_categories.png
-│       ├── 04_spatial_defect_heatmaps.png
-│       ├── eda_metrics.json
-│       └── eda_report.md
-│
-├── ai-service/                     # Asynchronous PyTorch / WinCLIP Serving Layer
-│   ├── README.md                   # Microservice documentation & API contracts
-│   ├── requirements.txt            # Python dependencies (FastAPI, PyTorch, OpenCLIP)
-│   └── app/
-│       ├── main.py                 # FastAPI application routes
-│       ├── config.py               # Runtime settings & supported categories
-│       └── schemas.py              # Pydantic request/response models
-│
-└── README.md                       # Master Project Guide (this file)
+├── ai-service/
+│   ├── app/
+│   │   ├── main.py                 # FastAPI endpoints and shared predict workflow
+│   │   ├── config.py               # Dataset, CORS, threshold, and upload settings
+│   │   ├── winclip_runtime.py      # Lazy pretrained WinCLIP runtime/cache
+│   │   ├── history_store.py        # SQLite metadata and safe asset storage
+│   │   ├── ground_truth.py         # Content-based MVTec mask matching
+│   │   ├── reports.py              # Individual and batch PDF generation
+│   │   └── schemas.py              # Request and response schemas
+│   ├── requirements.txt
+│   └── README.md                   # Backend setup and endpoint details
+├── frontend/
+│   ├── src/App.tsx                 # Dashboard shell, single-image workflow, navigation
+│   ├── src/components/
+│   │   ├── BatchInspection.tsx
+│   │   ├── InspectionHistory.tsx
+│   │   └── ModelEvaluation.tsx
+│   ├── src/api.ts
+│   ├── src/styles.css
+│   └── package.json
+├── experiments/
+│   ├── evaluate_winclip.py         # MVTec zero-shot evaluation script
+│   ├── run_winclip_demo.py         # Verified single-image WinCLIP demo
+│   ├── verify_dataset.py
+│   ├── eda.py
+│   └── evaluation_results/         # Saved per-category CSV/JSON, charts, summary
+├── docs/                           # Project problem, objectives, methodology, literature
+├── dataset/                        # Local MVTec AD data; not tracked in Git
+└── README.md
 ```
 
----
+## Known limitations
 
-## 4. Dataset Verification & EDA Highlights
+- The evaluation is a 20-image-per-category pilot, not a full test-set benchmark.
+- The service uses one cached category model at a time and serializes inference. Changing categories may cause model reinitialization.
+- CPU inference can be slow, and the first request may include model initialization. Batch inspection processes files sequentially, so total time grows with batch size.
+- Ground truth is unavailable for arbitrary uploads, normal samples, ambiguous content matches, or missing local masks.
+- Inspection records and uploaded assets are stored locally and are not synchronized across machines.
+- The prediction threshold is a configurable service decision setting; the pilot AUROC metrics do not calibrate it.
+- A timing outlier is present in the saved transistor evaluation metrics; consult the evaluation report before interpreting timing comparisons.
 
-The dataset verification (`verify_dataset.py`) and exploratory analysis (`eda.py`) established the following verified empirical baselines:
+## References
 
-```
-+--------------------------------------------------------------------------------------------------+
-|                            MVTec AD Empirical Verification Baselines                             |
-+--------------------------------------------------------------------------------------------------+
-| Total Categories                  : 15 (5 Textures, 10 Rigid Objects)                           |
-| Total Normal Training Images      : 3,629                                                       |
-| Total Normal Testing Images       : 467                                                         |
-| Total Defective Testing Images    : 1,258                                                       |
-| Total Testing Images              : 1,725                                                       |
-| Total Inspection Images           : 5,354                                                       |
-| Total Ground-Truth Binary Masks   : 1,258 (Exact 1:1 match with defective test images)          |
-| Total Unique Defect Classes       : 73 distinct topologies                                      |
-| Dataset Integrity Status          : 100% PERFECT MATCH (Zero missing, zero corrupted)          |
-+--------------------------------------------------------------------------------------------------+
-```
+1. Jeong, J. et al. (CVPR 2023). *WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation.*
+2. Bergmann, P. et al. (CVPR 2019). *MVTec AD—A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection.*
 
-### Key Finding for WinCLIP Modeling
-* **39.7% of all defects occupy less than 1.0% of the image area** (median defect area: `1.54%`).
-* **Why this matters:** Traditional CLIP processes $224 \times 224$ images split into $16 \times 16$ patches ($14 \times 14$ grid). A micro-defect occupies only 1–2 patch tokens, causing the global `[CLS]` token to completely drown the anomaly signal. Multi-scale sliding window aggregation ($2 \times 2$ and $3 \times 3$ window pooling) is mathematically mandatory to isolate defective tokens.
-
----
-
-## 5. Technology Stack
-
-| Layer | Technologies Selected | Rationale |
-| :--- | :--- | :--- |
-| **AI-Assisted Dev** | Google Antigravity | Agentic pair programming, system design & documentation |
-| **Deep Learning** | Python, PyTorch, OpenCLIP, WinCLIP | Native CUDA acceleration, Vision Transformer backbones |
-| **Experimentation** | Google Colab (T4 / A100 GPU) | High-VRAM environment for high-resolution MVTec evaluation |
-| **Dataset** | MVTec AD Benchmark | 15 categories, 5,354 images, pixel-precise ground truth |
-| **AI API Microservice** | FastAPI, Uvicorn, Pydantic | Asynchronous REST serving with strict schema contracts |
-| **Application Backend** | Node.js, Express / Fastify, Multer | Non-blocking file upload streaming & request orchestration |
-| **Database** | SQLite 3 | Zero-configuration relational storage of inspection audit logs |
-| **Operator UI** | React, TypeScript, Tailwind CSS | High-contrast industrial dashboard with real-time heatmap controls |
-
----
-
-## 6. How to Run Verification & EDA
-
-### 6.1 Verify Dataset Integrity
-```bash
-python experiments/verify_dataset.py
-```
-*Outputs detailed ASCII tables and saves the report to `experiments/dataset_summary.txt`.*
-
-### 6.2 Run Exploratory Data Analysis (EDA)
-```bash
-python experiments/eda.py
-```
-*Processes all 1,258 ground truth masks, computes defect area metrics, plots 4 publication-quality figures, and generates `experiments/eda_outputs/eda_report.md`.*
-
----
-
-## 7. Foundational References
-
-1. **Bergmann, P. et al. (CVPR 2019):** *MVTec AD — A Comprehensive Real-World Dataset for Unsupervised Anomaly Detection.*
-2. **Radford, A. et al. (ICML 2021):** *Learning Transferable Visual Models From Natural Language Supervision (CLIP).*
-3. **Roth, K. et al. (CVPR 2022):** *Towards Total Recall in Industrial Anomaly Detection (PatchCore).*
-4. **Jeong, J. et al. (CVPR 2023):** *WinCLIP: Zero-/Few-Shot Anomaly Classification and Segmentation.*
-5. **Zhou, Q. et al. (ICLR 2024):** *AnomalyCLIP: Being Categorical and Prompt-driven for Anomaly Detection.*
+For the project’s broader motivation and methodology, see the files in [`docs/`](docs/).

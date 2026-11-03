@@ -1,0 +1,30 @@
+{
+  "category": "wood",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "color": 2,
+    "combined": 2,
+    "hole": 2,
+    "liquid": 2,
+    "scratch": 2
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 1.0,
+  "image_auroc_display": "1.0000",
+  "pixel_auroc": 0.937139,
+  "pixel_auroc_display": "0.9371",
+  "mean_inference_time_sec": 6.8529,
+  "std_inference_time_sec": 0.3497,
+  "min_inference_time_sec": 6.2845,
+  "max_inference_time_sec": 7.7321,
+  "total_evaluation_time_sec": 138.38,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-11-01T12:44:38.589606+00:00"
+}

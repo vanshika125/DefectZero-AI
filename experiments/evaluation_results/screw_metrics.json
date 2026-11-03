@@ -1,0 +1,30 @@
+{
+  "category": "screw",
+  "model_name": "WinCLIP (ViT-B-16-plus-240, LAION-400M)",
+  "inference_mode": "Zero-Shot (k_shot=0)",
+  "total_samples_evaluated": 20,
+  "class_distribution": {
+    "good": 10,
+    "manipulated_front": 2,
+    "scratch_head": 2,
+    "scratch_neck": 2,
+    "thread_side": 2,
+    "thread_top": 2
+  },
+  "normal_samples": 10,
+  "defective_samples": 10,
+  "image_auroc": 0.68,
+  "image_auroc_display": "0.6800",
+  "pixel_auroc": 0.901443,
+  "pixel_auroc_display": "0.9014",
+  "mean_inference_time_sec": 11.1195,
+  "std_inference_time_sec": 0.1696,
+  "min_inference_time_sec": 10.917,
+  "max_inference_time_sec": 11.7199,
+  "total_evaluation_time_sec": 223.87,
+  "anomaly_map_shape": [
+    240,
+    240
+  ],
+  "timestamp_utc": "2026-10-31T13:54:45.567150+00:00"
+}
