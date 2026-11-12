@@ -146,7 +146,7 @@ At FastAPI startup, SQLite schema and the storage directory are initialized auto
 
 | Environment variable | Default | Purpose |
 |---|---|---|
-| `DEFECTZERO_CORS_ORIGINS` | `http://localhost:5173` | Comma-separated exact browser origins allowed to call the API. Set this to the actual React dev origin if it differs. |
+| `DEFECTZERO_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173,https://defect-zero-ai.vercel.app` | Comma-separated exact browser origins allowed to call the API. Set the same full list in Render to retain localhost development and allow the production Vercel frontend. |
 | `DEFECTZERO_DEFECT_THRESHOLD` | `0.5` | Image-score cutoff for the predicted label. |
 | `DEFECTZERO_MAX_UPLOAD_BYTES` | `10485760` | Maximum uploaded file size (10 MiB). |
 | `DEFECTZERO_MAX_IMAGE_PIXELS` | `25000000` | Maximum decoded width × height. |

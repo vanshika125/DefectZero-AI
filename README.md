@@ -150,7 +150,7 @@ $env:VITE_API_BASE_URL = "http://127.0.0.1:8000"
 npm run dev -- --host localhost
 ```
 
-Open <http://localhost:5173/>. The backend allows the default development origin `http://localhost:5173`; set `DEFECTZERO_CORS_ORIGINS` to the exact frontend origin if it differs. Do not use a wildcard origin for a deployed service.
+Open <http://localhost:5173/>. The backend defaults to the exact origins `http://localhost:5173`, `http://127.0.0.1:5173`, and `https://defect-zero-ai.vercel.app`. Set `DEFECTZERO_CORS_ORIGINS` to a comma-separated list of exact origins in Render, for example `http://localhost:5173,http://127.0.0.1:5173,https://defect-zero-ai.vercel.app`. Do not use a wildcard origin.
 
 ## API endpoints
 
