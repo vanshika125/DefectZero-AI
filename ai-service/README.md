@@ -38,6 +38,10 @@ Returns process status and model state:
 
 `model_ready` becomes true after the first successful model initialization. If initialization or inference fails, the latest error is included for diagnosis.
 
+### `GET /settings`
+
+Returns non-sensitive runtime values used by the Settings page: zero-shot mode, threshold, upload limits, supported categories, persistence approach, and model cache policy. It does not return filesystem paths, credentials, or other environment variables. Values are read-only in the dashboard and take effect from the backend process configuration.
+
 ### `GET /categories`
 
 Returns the supported MVTec AD category names: `bottle`, `cable`, `capsule`, `carpet`, `grid`, `hazelnut`, `leather`, `metal_nut`, `pill`, `screw`, `tile`, `toothbrush`, `transistor`, `wood`, and `zipper`.

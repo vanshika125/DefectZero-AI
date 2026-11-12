@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 
@@ -6,30 +6,36 @@ type CategoryStats = { category: string; training_count: number; normal_test_cou
 type DatasetSummary = { categories: CategoryStats[]; category_count: number };
 type Sample = { sample_id: string; filename: string; group: "normal" | "defective"; defect_type: string; mask_available: boolean; image_url: string; mask_url: string | null };
 
-export default function DatasetExplorer() {
+export default function DatasetExplorer({ initialCategory }: { initialCategory?: string }) {
   const [summary, setSummary] = useState<DatasetSummary | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory ?? "");
   const [samples, setSamples] = useState<Sample[]>([]);
+  const [categoryQuery, setCategoryQuery] = useState("");
+  const [sampleGroup, setSampleGroup] = useState<"all" | "normal" | "defective">("all");
   const [loading, setLoading] = useState(true);
   const [samplesLoading, setSamplesLoading] = useState(false);
   const [error, setError] = useState("");
   const [samplesError, setSamplesError] = useState("");
 
-  useEffect(() => {
-    let cancelled = false;
-    fetch(`${API_BASE}/dataset`).then(async (response) => {
+  const loadSummary = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const response = await fetch(`${API_BASE}/dataset`);
       if (!response.ok) throw new Error(`Dataset metadata request failed (HTTP ${response.status}).`);
-      return await response.json() as DatasetSummary;
-    }).then((data) => {
-      if (!cancelled) {
-        setSummary(data);
-        setSelectedCategory(data.categories[0]?.category ?? "");
-      }
-    }).catch((caught: unknown) => {
-      if (!cancelled) setError(caught instanceof Error ? caught.message : "Could not load dataset metadata.");
-    }).finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, []);
+      const data = await response.json() as DatasetSummary;
+      setSummary(data);
+      setSelectedCategory((current) => data.categories.find((item) => item.category === (initialCategory || current))?.category ?? data.categories[0]?.category ?? "");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not load dataset metadata.");
+    } finally {
+      setLoading(false);
+    }
+  }, [initialCategory]);
+
+  useEffect(() => {
+    void loadSummary();
+  }, [loadSummary]);
 
   useEffect(() => {
     if (!selectedCategory) return;
@@ -46,6 +52,8 @@ export default function DatasetExplorer() {
   }, [selectedCategory]);
 
   const selected = summary?.categories.find((item) => item.category === selectedCategory) ?? null;
+  const visibleCategories = (summary?.categories ?? []).filter((item) => item.category.replaceAll("_", " ").toLocaleLowerCase().includes(categoryQuery.trim().toLocaleLowerCase()));
+  const visibleSamples = samples.filter((sample) => sampleGroup === "all" || sample.group === sampleGroup);
   const totals = useMemo(() => {
     const rows = summary?.categories ?? [];
     return rows.reduce((acc, row) => ({
@@ -53,20 +61,26 @@ export default function DatasetExplorer() {
       normal: acc.normal + (row.normal_test_count_verified ? row.normal_test_count : 0),
       defective: acc.defective + (row.defective_test_count_verified ? row.defective_test_count : 0),
       masks: acc.masks + (row.ground_truth_mask_count_verified ? row.ground_truth_mask_count : 0),
-    }), { train: 0, normal: 0, defective: 0, masks: 0 });
+      total: acc.total + (row.training_count_verified ? row.training_count : 0) + (row.normal_test_count_verified ? row.normal_test_count : 0) + (row.defective_test_count_verified ? row.defective_test_count : 0),
+    }), { train: 0, normal: 0, defective: 0, masks: 0, total: 0 });
   }, [summary]);
 
   return <section className="dataset-page">
-    <div className="dataset-heading"><div><span className="history-eyebrow">MVTEC ANOMALY DETECTION</span><h2>Dataset Explorer</h2><p>Browse available categories, verified image counts, and representative test samples.</p></div><label className="dataset-category-filter">Filter category<select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} disabled={!summary?.categories.length}><option value="">Choose a category</option>{summary?.categories.map((row) => <option key={row.category} value={row.category}>{formatCategory(row.category)}</option>)}</select></label></div>
+    <div className="dataset-heading"><div><span className="history-eyebrow">MVTEC ANOMALY DETECTION</span><h2>Dataset Explorer</h2><p>Browse verified local dataset counts, category coverage, samples, and available ground-truth masks.</p></div><div className="dataset-heading-actions"><label className="dataset-category-filter">Filter categories<input type="search" value={categoryQuery} onChange={(event) => setCategoryQuery(event.target.value)} placeholder="Search categories…" aria-label="Filter MVTec categories" /></label><label className="dataset-category-filter">Selected category<select value={selectedCategory} onChange={(event) => setSelectedCategory(event.target.value)} disabled={!summary?.categories.length}><option value="">Choose a category</option>{visibleCategories.map((row) => <option key={row.category} value={row.category}>{formatCategory(row.category)}</option>)}</select></label><button type="button" className="history-secondary-button" onClick={() => void loadSummary()} disabled={loading}>{loading ? "Refreshing…" : "Refresh data"}</button></div></div>
     {error && <div className="history-error" role="alert">{error}</div>}
     {loading ? <div className="history-state">Loading dataset metadata…</div> : !summary?.categories.length ? <div className="history-empty"><strong>Dataset metadata unavailable</strong><span>{error || "No supported MVTec category folders were found."}</span></div> : <>
       <div className="dataset-overview-stats">
         <DatasetStat label="Categories present" value={`${summary.category_count} / 15`} />
+        <DatasetStat label="Total available images" value={totals.total.toLocaleString()} />
         <DatasetStat label="Training images" value={totals.train.toLocaleString()} />
         <DatasetStat label="Normal test images" value={totals.normal.toLocaleString()} />
         <DatasetStat label="Defective test images" value={totals.defective.toLocaleString()} />
         <DatasetStat label="Ground-truth masks" value={totals.masks.toLocaleString()} />
       </div>
+      <p className="dataset-count-disclaimer">Totals include only counts whose dataset folders are present and verified. Refresh data to rescan the local dataset.</p>
+      <section className="dataset-panel"><div className="dataset-panel-heading"><div><h3>Category coverage</h3><p>{visibleCategories.length} matching categories · select a category to inspect its sample data.</p></div><span className="dataset-availability">{summary.category_count} found</span></div>
+        {visibleCategories.length ? <div className="dataset-category-grid">{visibleCategories.map((row) => <button type="button" key={row.category} className={`dataset-category-card ${selectedCategory === row.category ? "selected" : ""}`} onClick={() => setSelectedCategory(row.category)} aria-pressed={selectedCategory === row.category}><span>{formatCategory(row.category)}</span><strong>{row.normal_test_count_verified && row.defective_test_count_verified ? row.test_count.toLocaleString() : "—"}</strong><small>test images · {row.training_count_verified ? row.training_count.toLocaleString() : "—"} train</small></button>)}</div> : <div className="dataset-sample-empty">No categories match this filter.</div>}
+      </section>
       <section className="dataset-panel">
         <div className="dataset-panel-heading"><div><h3>{selected ? formatCategory(selected.category) : "Category details"}</h3><p>Counts are read from the available local dataset files.</p></div><span className="dataset-availability">{selected ? "Dataset folder present" : "No category selected"}</span></div>
         {selected && <div className="dataset-count-grid">
@@ -78,9 +92,9 @@ export default function DatasetExplorer() {
       </section>
 
       <section className="dataset-panel">
-        <div className="dataset-panel-heading"><div><h3>Representative test samples</h3><p>Up to three normal and three defective test images for the selected category. Masks appear only when files exist.</p></div></div>
+        <div className="dataset-panel-heading"><div><h3>Representative test samples</h3><p>Up to three normal and three defective test images for the selected category. Masks appear only when files exist.</p></div><div className="dataset-sample-filter" role="group" aria-label="Filter sample type">{(["all", "normal", "defective"] as const).map((group) => <button type="button" key={group} className={sampleGroup === group ? "active" : ""} aria-pressed={sampleGroup === group} onClick={() => setSampleGroup(group)}>{group === "all" ? "All" : group === "normal" ? "Normal" : "Defective"}</button>)}</div></div>
         {samplesError && <div className="history-error" role="alert">{samplesError}</div>}
-        {samplesLoading ? <div className="history-state">Loading representative samples…</div> : samples.length === 0 ? <div className="dataset-sample-empty">No test samples are available for this category.</div> : <div className="dataset-sample-grid">{samples.map((sample) => <article className="dataset-sample-card" key={sample.sample_id}>
+        {samplesLoading ? <div className="history-state">Loading representative samples…</div> : visibleSamples.length === 0 ? <div className="dataset-sample-empty">No {sampleGroup === "all" ? "test" : sampleGroup} samples are available for this category.</div> : <div className="dataset-sample-grid">{visibleSamples.map((sample) => <article className="dataset-sample-card" key={sample.sample_id}>
           <div className="dataset-sample-title"><strong title={sample.filename}>{sample.filename}</strong><span className={`history-label ${sample.group === "defective" ? "defective" : "normal"}`}>{sample.group}</span></div>
           <p>{sample.group === "normal" ? "good · normal" : formatCategory(sample.defect_type)}</p>
           <div className={`dataset-sample-images ${sample.mask_available ? "with-mask" : ""}`}><figure><img src={`${API_BASE}${sample.image_url}`} alt={`${sample.group} ${sample.filename}`} loading="lazy" /><figcaption>Test image</figcaption></figure>{sample.mask_available && sample.mask_url ? <figure><img src={`${API_BASE}${sample.mask_url}`} alt={`Ground-truth defect mask for ${sample.filename}`} loading="lazy" /><figcaption>Ground-truth mask</figcaption></figure> : <div className="dataset-mask-note">{sample.group === "normal" ? "Normal samples have no defect mask." : "Ground-truth mask unavailable."}</div>}</div>

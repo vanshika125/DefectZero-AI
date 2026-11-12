@@ -88,6 +88,21 @@ def categories() -> list[str]:
     return settings.SUPPORTED_CATEGORIES
 
 
+@app.get("/settings", tags=["service"])
+def get_public_settings() -> dict[str, object]:
+    """Expose only non-sensitive runtime settings used by the dashboard."""
+    return {
+        "inference_mode": "zero-shot",
+        "k_shot": 0,
+        "defect_threshold": settings.DEFECT_THRESHOLD,
+        "max_upload_bytes": settings.MAX_UPLOAD_BYTES,
+        "max_image_pixels": settings.MAX_IMAGE_PIXELS,
+        "supported_categories": settings.SUPPORTED_CATEGORIES,
+        "persistence": "SQLite metadata with inspection-scoped local asset files",
+        "model_cache_policy": "one category model cached at a time; inference serialized",
+    }
+
+
 @app.get("/evaluation", tags=["evaluation"])
 def get_evaluation_results() -> dict[str, object]:
     """Read the saved pilot summary and per-category metrics without running evaluation."""

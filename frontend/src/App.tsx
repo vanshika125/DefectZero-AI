@@ -5,6 +5,9 @@ import ModelEvaluation from "./components/ModelEvaluation";
 import BatchInspection from "./components/BatchInspection";
 import DatasetExplorer from "./components/DatasetExplorer";
 import Reports from "./components/Reports";
+import Settings from "./components/Settings";
+import GlobalSearch from "./components/GlobalSearch";
+import Overview from "./components/Overview";
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/bmp"];
@@ -86,16 +89,20 @@ function App() {
   const [category, setCategory] = useState("");
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
+  const categoriesRequest = useRef(false);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [prediction, setPrediction] = useState<Prediction | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [statusOpen, setStatusOpen] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [view, setView] = useState<ViewMode>("comparison");
   const [zoom, setZoom] = useState(1);
-  const [activeNav, setActiveNav] = useState("Inspect");
+  const [activeNav, setActiveNav] = useState("Overview");
+  const [datasetInitialCategory, setDatasetInitialCategory] = useState<string | undefined>(undefined);
+  const [historyInitialId, setHistoryInitialId] = useState<string | undefined>(undefined);
   const inputRef = useRef<HTMLInputElement>(null);
   const comparisonRef = useRef<HTMLDivElement>(null);
 
@@ -112,30 +119,36 @@ function App() {
     }
   }, []);
 
+  const loadCategories = useCallback(async () => {
+    if (categoriesRequest.current) return;
+    categoriesRequest.current = true;
+    try {
+      const response = await fetch(`${API_BASE}/categories`, { signal: AbortSignal.timeout(7000) });
+      if (!response.ok) throw new Error(`Categories request returned ${response.status}`);
+      const data: unknown = await response.json();
+      if (!Array.isArray(data) || !data.every((item) => typeof item === "string")) throw new Error("Invalid categories response");
+      setCategories(data);
+      setCategory((current) => current || data[0] || "");
+      setError("");
+    } catch {
+      setError(`Could not load categories from ${API_BASE}. Start the FastAPI service and refresh this page.`);
+    } finally {
+      categoriesRequest.current = false;
+    }
+  }, []);
+
   useEffect(() => {
-    let cancelled = false;
-    const loadCategories = async () => {
-      try {
-        const response = await fetch(`${API_BASE}/categories`, { signal: AbortSignal.timeout(7000) });
-        if (!response.ok) throw new Error(`Categories request returned ${response.status}`);
-        const data: unknown = await response.json();
-        if (!Array.isArray(data) || !data.every((item) => typeof item === "string")) throw new Error("Invalid categories response");
-        if (!cancelled) {
-          setCategories(data);
-          setCategory((current) => current || data[0] || "");
-        }
-      } catch {
-        if (!cancelled) setError(`Could not load categories from ${API_BASE}. Start the FastAPI service and refresh this page.`);
-      }
-    };
     void loadCategories();
     void refreshHealth();
     const timer = window.setInterval(() => void refreshHealth(), 15000);
     return () => {
-      cancelled = true;
       window.clearInterval(timer);
     };
-  }, [refreshHealth]);
+  }, [loadCategories, refreshHealth]);
+
+  useEffect(() => {
+    if (apiOnline && categories.length === 0) void loadCategories();
+  }, [apiOnline, categories.length, loadCategories]);
 
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
@@ -219,21 +232,23 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand"><div className="brand-mark"><Icon name="logo" size={34} /></div><div><strong>DefectZero AI</strong><span>Zero-Shot Defect Detection</span></div></div>
-        <button className="dataset-switch" type="button" aria-label="Dataset selector"><span>MVTec AD</span><Icon name="chevron" size={17} /></button>
-        <div className="search-box"><Icon name="search" size={17} /><input aria-label="Search navigation" placeholder="Search..." /><kbd>Ctrl K</kbd></div>
+        <button className="dataset-switch" type="button" aria-label="Open MVTec AD dataset explorer" onClick={() => { setActiveNav("Datasets"); setDatasetInitialCategory(undefined); setHistoryInitialId(undefined); setNotice(""); }}><span>MVTec AD</span><Icon name="chevron" size={17} /></button>
+        <GlobalSearch categories={categories} onNavigate={(page, targetCategory, inspectionId) => { setActiveNav(page); setNotice(""); setDatasetInitialCategory(targetCategory); setHistoryInitialId(inspectionId); }} />
         <nav aria-label="Main navigation" className="navigation">
-          {navGroups.map((group) => <section className="nav-group" key={group.title}><h2>{group.title}</h2>{group.links.map((link) => <button type="button" key={link.label} className={`nav-link ${activeNav === link.label ? "active" : ""}`} onClick={() => { setActiveNav(link.label); setNotice(["Inspect", "Batch Inspection", "Inspection History", "Model Evaluation", "Datasets", "Reports"].includes(link.label) ? "" : `${link.label} navigation is ready for a future project phase.`); }}><Icon name={link.icon} size={19} /><span>{link.label}</span></button>)}</section>)}
+          {navGroups.map((group) => <section className="nav-group" key={group.title}><h2>{group.title}</h2>{group.links.map((link) => <button type="button" key={link.label} className={`nav-link ${activeNav === link.label ? "active" : ""}`} onClick={() => { setActiveNav(link.label); setHistoryInitialId(undefined); setNotice(""); }}><Icon name={link.icon} size={19} /><span>{link.label}</span></button>)}</section>)}
         </nav>
         <div className="sidebar-profile"><div className="avatar">VM</div><div className="profile-copy"><strong>Vanshika Malik</strong><span>DefectZero Operator</span></div><Icon name="chevron" size={15} /></div>
       </aside>
 
       <main className="main-area">
-        <header className="topbar"><div className="workspace-icon"><Icon name={activeNav === "Model Evaluation" ? "evaluation" : activeNav === "Datasets" ? "datasets" : activeNav === "Reports" ? "report" : "inspect"} size={28} /></div><div className="page-heading"><h1>{activeNav === "Inspection History" ? "Inspection History" : activeNav === "Model Evaluation" ? "Model Evaluation" : activeNav === "Batch Inspection" ? "Batch Inspection" : activeNav === "Datasets" ? "Dataset Explorer" : activeNav === "Reports" ? "Reports" : "Inspection Workspace"}</h1><p>{activeNav === "Inspection History" ? "Review saved inspection results and download reports." : activeNav === "Model Evaluation" ? "Explore saved zero-shot evaluation metrics across MVTec AD." : activeNav === "Batch Inspection" ? "Inspect multiple images sequentially and review each result." : activeNav === "Datasets" ? "Browse verified MVTec AD categories, counts, and representative samples." : activeNav === "Reports" ? "Open saved inspection reports and review evaluation outputs." : "Upload an image, select the MVTec AD category, and analyze results with visual comparison."}</p></div><div className={`connection-pill ${apiOnline === true ? "online" : apiOnline === false ? "offline" : "connecting"}`}><span className="status-dot" />{apiOnline === true ? "API Connected" : apiOnline === false ? "API Offline" : "Connecting..."}</div><button className="icon-button notification" type="button" aria-label="Notifications" title="Notifications"><Icon name="bell" size={22} /><span className="notification-dot" /></button><div className="avatar top-avatar" aria-label="Vanshika Malik">VM</div></header>
+        <header className="topbar"><div className="workspace-icon"><Icon name={activeNav === "Overview" ? "overview" : activeNav === "Model Evaluation" ? "evaluation" : activeNav === "Datasets" ? "datasets" : activeNav === "Reports" ? "report" : activeNav === "Settings" ? "settings" : activeNav === "Inspection History" ? "history" : "inspect"} size={28} /></div><div className="page-heading"><h1>{activeNav === "Overview" ? "Overview" : activeNav === "Inspection History" ? "Inspection History" : activeNav === "Model Evaluation" ? "Model Evaluation" : activeNav === "Batch Inspection" ? "Batch Inspection" : activeNav === "Datasets" ? "Dataset Explorer" : activeNav === "Reports" ? "Reports" : activeNav === "Settings" ? "Settings" : "Inspection Workspace"}</h1><p>{activeNav === "Overview" ? "Monitor recent zero-shot inspections and saved evaluation results." : activeNav === "Inspection History" ? "Review saved inspection results and download reports." : activeNav === "Model Evaluation" ? "Explore saved zero-shot evaluation metrics across MVTec AD." : activeNav === "Batch Inspection" ? "Inspect multiple images sequentially and review each result." : activeNav === "Datasets" ? "Browse verified MVTec AD categories, counts, and representative samples." : activeNav === "Reports" ? "Open saved inspection reports and review evaluation outputs." : activeNav === "Settings" ? "Review service status, inference settings, and input limits." : "Upload an image, select the MVTec AD category, and analyze results with visual comparison."}</p></div><div className={`connection-pill ${apiOnline === true ? "online" : apiOnline === false ? "offline" : "connecting"}`}><span className="status-dot" />{apiOnline === true ? "API Connected" : apiOnline === false ? "API Offline" : "Connecting..."}</div><button className="icon-button notification" type="button" aria-label="Service status details" aria-expanded={statusOpen} aria-controls="service-status-popover" title="Service status details" onClick={() => setStatusOpen((open) => !open)}><Icon name="bell" size={22} /><span className="notification-dot" /></button><div className="avatar top-avatar" aria-label="Vanshika Malik">VM</div></header>
+
+        {statusOpen && <section className="service-status-popover" id="service-status-popover" aria-label="Service status details"><div className="service-status-heading"><strong>Service status</strong><button type="button" onClick={() => setStatusOpen(false)} aria-label="Close service status">×</button></div><div className="service-status-row"><span>FastAPI</span><strong className={apiOnline ? "online" : apiOnline === false ? "offline" : "pending"}>{apiOnline ? "Connected" : apiOnline === false ? "Offline" : "Checking"}</strong></div><div className="service-status-row"><span>WinCLIP model</span><strong>{health?.model_ready ? `Ready · ${health.device ?? "device unknown"}` : "Loads on first inspection"}</strong></div>{health?.last_model_error && <p className="service-status-error">{health.last_model_error}</p>}</section>}
 
         {notice && <div className="notice-banner" role="status">{notice}<button type="button" onClick={() => setNotice("")} aria-label="Dismiss"><Icon name="close" size={16} /></button></div>}
         {error && <div className="error-banner" role="alert"><span>{error}</span><button type="button" onClick={() => setError("")} aria-label="Dismiss error"><Icon name="close" size={16} /></button></div>}
 
-        {activeNav === "Inspection History" ? <InspectionHistory /> : activeNav === "Model Evaluation" ? <ModelEvaluation /> : activeNav === "Batch Inspection" ? <BatchInspection categories={categories} /> : activeNav === "Datasets" ? <DatasetExplorer /> : activeNav === "Reports" ? <Reports /> : <div className="workspace-grid">
+        {activeNav === "Overview" ? <Overview onNavigate={(page, inspectionId) => { setActiveNav(page); setHistoryInitialId(inspectionId); setNotice(""); }} /> : activeNav === "Inspection History" ? <InspectionHistory initialInspectionId={historyInitialId} /> : activeNav === "Model Evaluation" ? <ModelEvaluation /> : activeNav === "Batch Inspection" ? <BatchInspection categories={categories} /> : activeNav === "Datasets" ? <DatasetExplorer initialCategory={datasetInitialCategory} /> : activeNav === "Reports" ? <Reports /> : activeNav === "Settings" ? <Settings /> : <div className="workspace-grid">
           <section className="panel setup-panel">
             <div className="panel-heading"><span className="round-icon"><Icon name="upload" size={21} /></span><h2>Inspection Setup</h2></div>
             <form onSubmit={runInspection}>

@@ -4,7 +4,7 @@ import type { InspectionAsset, InspectionRecord } from "../api";
 
 const PAGE_SIZE = 50;
 
-export default function InspectionHistory() {
+export default function InspectionHistory({ initialInspectionId }: { initialInspectionId?: string }) {
   const [records, setRecords] = useState<InspectionRecord[]>([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -77,6 +77,8 @@ export default function InspectionHistory() {
     setSelected(null);
     setError("");
   };
+
+  useEffect(() => { if (initialInspectionId) void openInspection(initialInspectionId); }, [initialInspectionId]);
 
   const downloadReport = async (inspectionId: string) => {
     setReportBusyId(inspectionId);
