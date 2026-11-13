@@ -1,0 +1,28 @@
+{
+  "name": "DefectZero AI (Python 3.11 CPU)",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "hostRequirements": {
+    "cpus": 2,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+  "remoteUser": "vscode",
+  "containerEnv": {
+    "DEFECTZERO_DATASET_ROOT": "${containerWorkspaceFolder}/dataset",
+    "DEFECTZERO_INSPECTION_STORAGE": "${containerWorkspaceFolder}/ai-service/inspection_storage",
+    "DEFECTZERO_CORS_ORIGINS": "http://localhost:5173,http://127.0.0.1:5173,https://defect-zero-ai.vercel.app",
+    "DEFECTZERO_DEFECT_THRESHOLD": "0.5",
+    "TORCH_HOME": "${containerWorkspaceFolder}/.cache/torch"
+  },
+  "forwardPorts": [8000],
+  "portsAttributes": {
+    "8000": {
+      "label": "DefectZero FastAPI",
+      "onAutoForward": "notify",
+      "visibility": "private"
+    }
+  }
+}

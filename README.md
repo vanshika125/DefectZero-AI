@@ -98,6 +98,8 @@ The evaluation dashboard reads the existing CSV and JSON files. It does not run 
 
 ## Windows PowerShell setup
 
+For the Linux CPU Codespaces environment, see [Codespaces setup](docs/CODESPACES_SETUP.md). Codespaces is limited-hours and not always-on hosting.
+
 Run from the repository root. To create a new environment, activate it, and install backend dependencies:
 
 ```powershell
